@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pack Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pack Calculator</h1>
+            <p class="subtitle">Calculate optimal pack sizes for customer orders</p>
+        </header>
+
+        <main>
+            <!-- Calculator Section -->
+            <section class="calculator-section">
+                <h2>Calculate Packs</h2>
+                <form id="calculateForm" class="form">
+                    <div class="form-group">
+                        <label for="orderQuantity">Order Quantity</label>
+                        <input
+                            type="number"
+                            id="orderQuantity"
+                            name="orderQuantity"
+                            min="0"
+                            placeholder="Enter number of items"
+                            required
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary">Calculate</button>
+                </form>
+
+                <div id="resultSection" class="result-section hidden">
+                    <h3>Result</h3>
+                    <div class="order-summary">
+                        <span class="label">Order:</span>
+                        <span id="orderDisplay" class="value">0</span>
+                        <span class="label">items</span>
+                    </div>
+                    <div class="order-summary">
+                        <span class="label">Total Items Sent:</span>
+                        <span id="totalItemsDisplay" class="value">0</span>
+                    </div>
+                    <div class="order-summary">
+                        <span class="label">Total Packs:</span>
+                        <span id="totalPacksDisplay" class="value">0</span>
+                    </div>
+                    <div class="packs-list">
+                        <h4>Packs to Send:</h4>
+                        <ul id="packsList"></ul>
+                    </div>
+                </div>
+
+                <div id="errorSection" class="error-section hidden">
+                    <div class="error-message" id="errorMessage"></div>
+                </div>
+
+                <!-- Test Cases -->
+                <div class="test-cases">
+                    <h4>Quick Test Cases:</h4>
+                    <div class="test-buttons">
+                        <button type="button" class="btn btn-secondary" data-quantity="1">1 item</button>
+                        <button type="button" class="btn btn-secondary" data-quantity="250">250 items</button>
+                        <button type="button" class="btn btn-secondary" data-quantity="251">251 items</button>
+                        <button type="button" class="btn btn-secondary" data-quantity="501">501 items</button>
+                        <button type="button" class="btn btn-secondary" data-quantity="12001">12001 items</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Configuration Section -->
+            <section class="config-section">
+                <h2>Pack Size Configuration</h2>
+                <p class="config-hint">Configure the available pack sizes. Add, remove, or modify sizes as needed.</p>
+
+                <form id="configForm" class="form">
+                    <div class="form-group">
+                        <label>Current Pack Sizes</label>
+                        <div id="packSizesContainer" class="pack-sizes-container"></div>
+                    </div>
+                    <button type="button" id="addPackSize" class="btn btn-secondary">Add Pack Size</button>
+                    <button type="submit" class="btn btn-primary">Update Configuration</button>
+                </form>
+
+                <div class="default-configs">
+                    <h4>Quick Presets:</h4>
+                    <div class="preset-buttons">
+                        <button type="button" class="btn btn-outline" data-sizes="[100,200,500,1000]">Small Items</button>
+                        <button type="button" class="btn btn-outline" data-sizes="[250,500,1000,2000,5000]">Default (Original)</button>
+                        <button type="button" class="btn btn-outline" data-sizes="[10,20,50,100]">Sample Sizes</button>
+                        <button type="button" class="btn btn-outline" data-sizes="[1,5,10,25,50,100]">Coin Style</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Rules Reference -->
+            <section class="rules-section">
+                <h2>Packing Rules</h2>
+                <ol class="rules-list">
+                    <li><strong>Only whole packs can be sent.</strong> Packs cannot be broken open.</li>
+                    <li><strong>Send the least amount of items to fulfil the order.</strong> Minimize excess items.</li>
+                    <li><strong>Send as few packs as possible.</strong> When rules 1 & 2 are satisfied, minimize pack count.</li>
+                </ol>
+                <p class="rules-note">Note: Rule #2 takes precedence over Rule #3</p>
+            </section>
+        </main>
+
+        <footer>
+            <p>Pack Calculator API - RESTful HTTP Service</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
