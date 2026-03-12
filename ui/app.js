@@ -1,7 +1,7 @@
-// API Base URL - adjust if API is on different port/host
+// Points to our backend API (same host since we serve both together)
 const API_BASE = window.location.origin;
 
-// DOM Elements
+// Grab all the DOM elements we'll need upfront
 const calculateForm = document.getElementById('calculateForm');
 const configForm = document.getElementById('configForm');
 const orderQuantityInput = document.getElementById('orderQuantity');
@@ -15,236 +15,239 @@ const packsList = document.getElementById('packsList');
 const packSizesContainer = document.getElementById('packSizesContainer');
 const addPackSizeBtn = document.getElementById('addPackSize');
 
-// Initialize the app
+// Boot up the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    loadPackSizes();
-    setupEventListeners();
+	loadPackSizes();
+	setupEventListeners();
 });
 
-// Setup Event Listeners
+// Wire up all our event handlers
 function setupEventListeners() {
-    // Calculate form submission
-    calculateForm.addEventListener('submit', handleCalculate);
+	// When someone hits calculate on the form
+	calculateForm.addEventListener('submit', handleCalculate);
 
-    // Config form submission
-    configForm.addEventListener('submit', handleUpdateConfig);
+	// When someone saves new pack sizes
+	configForm.addEventListener('submit', handleUpdateConfig);
 
-    // Add pack size button
-    addPackSizeBtn.addEventListener('click', addPackSizeInput);
+	// Add a new pack size input field
+	addPackSizeBtn.addEventListener('click', addPackSizeInput);
 
-    // Test case buttons
-    document.querySelectorAll('.test-buttons .btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const quantity = parseInt(btn.dataset.quantity);
-            orderQuantityInput.value = quantity;
-            calculatePacks(quantity);
-        });
-    });
+	// Quick test buttons - just click to auto-fill and calculate
+	document.querySelectorAll('.test-buttons .btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+			const quantity = parseInt(btn.dataset.quantity);
+			orderQuantityInput.value = quantity;
+			calculatePacks(quantity);
+		});
+	});
 
-    // Preset buttons
-    document.querySelectorAll('.preset-buttons .btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const sizes = JSON.parse(btn.dataset.sizes);
-            updatePackSizes(sizes);
-        });
-    });
+	// Preset buttons for loading pre-defined pack configs
+	document.querySelectorAll('.preset-buttons .btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+			const sizes = JSON.parse(btn.dataset.sizes);
+			updatePackSizes(sizes);
+		});
+	});
 }
 
-// Handle Calculate Form Submit
+// Form was submitted - validate and call the API
 async function handleCalculate(e) {
-    e.preventDefault();
-    const quantity = parseInt(orderQuantityInput.value);
-    if (isNaN(quantity) || quantity < 0) {
-        showError('Please enter a valid non-negative number');
-        return;
-    }
-    await calculatePacks(quantity);
+	e.preventDefault();
+	const quantity = parseInt(orderQuantityInput.value);
+	if (isNaN(quantity) || quantity < 0) {
+		showError('Please enter a valid non-negative number');
+		return;
+	}
+	await calculatePacks(quantity);
 }
 
-// Calculate Packs
+// Call the backend to calculate optimal packs
 async function calculatePacks(quantity) {
-    try {
-        hideError();
-        hideResult();
+	try {
+		hideError();
+		hideResult();
 
-        const response = await fetch(`${API_BASE}/api/calculate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ orderQuantity: quantity }),
-        });
+		const response = await fetch(`${API_BASE}/api/calculate`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ orderQuantity: quantity }),
+		});
 
-        if (!response.ok) {
-            const error = await response.text();
-            throw new Error(error || 'Failed to calculate packs');
-        }
+		if (!response.ok) {
+			const error = await response.text();
+			throw new Error(error || 'Failed to calculate packs');
+		}
 
-        const data = await response.json();
-        displayResult(data, quantity);
-    } catch (error) {
-        showError(error.message || 'An error occurred while calculating');
-    }
+		const data = await response.json();
+		displayResult(data, quantity);
+	} catch (error) {
+		showError(error.message || 'An error occurred while calculating');
+	}
 }
 
-// Display Result
+// Show the calculated packs to the user
 function displayResult(data, orderQuantity) {
-    orderDisplay.textContent = orderQuantity.toLocaleString();
+	orderDisplay.textContent = orderQuantity.toLocaleString();
 
-    let totalItems = 0;
-    let totalPacks = 0;
+	let totalItems = 0;
+	let totalPacks = 0;
 
-    packsList.innerHTML = '';
-    data.packs.forEach(pack => {
-        totalItems += pack.size * pack.count;
-        totalPacks += pack.count;
+	// Build the pack display elements
+	packsList.innerHTML = '';
+	data.packs.forEach(pack => {
+		totalItems += pack.size * pack.count;
+		totalPacks += pack.count;
 
-        const li = document.createElement('li');
-        li.className = 'pack-item';
-        li.innerHTML = `
-            <span class="count">${pack.count}</span>
-            <span class="size">× ${pack.size.toLocaleString()}</span>
-            <span class="label">pack${pack.count > 1 ? 's' : ''}</span>
-        `;
-        packsList.appendChild(li);
-    });
+		const li = document.createElement('li');
+		li.className = 'pack-item';
+		li.innerHTML = `
+			<span class="count">${pack.count}</span>
+			<span class="size">× ${pack.size.toLocaleString()}</span>
+			<span class="label">pack${pack.count > 1 ? 's' : ''}</span>
+		`;
+		packsList.appendChild(li);
+	});
 
-    totalItemsDisplay.textContent = totalItems.toLocaleString();
-    totalPacksDisplay.textContent = totalPacks;
+	totalItemsDisplay.textContent = totalItems.toLocaleString();
+	totalPacksDisplay.textContent = totalPacks;
 
-    showResult();
+	showResult();
 }
 
-// Load Pack Sizes
+// Get the current pack sizes from the server
 async function loadPackSizes() {
-    try {
-        const response = await fetch(`${API_BASE}/api/packsizes`);
-        if (!response.ok) {
-            throw new Error('Failed to load pack sizes');
-        }
-        const data = await response.json();
-        renderPackSizeInputs(data.packSizes);
-    } catch (error) {
-        console.error('Failed to load pack sizes:', error);
-        // Use default sizes if API fails
-        renderPackSizeInputs([250, 500, 1000, 2000, 5000]);
-    }
+	try {
+		const response = await fetch(`${API_BASE}/api/packsizes`);
+		if (!response.ok) {
+			throw new Error('Failed to load pack sizes');
+		}
+		const data = await response.json();
+		renderPackSizeInputs(data.packSizes);
+	} catch (error) {
+		console.error('Failed to load pack sizes:', error);
+		// Fall back to defaults if the API is down
+		renderPackSizeInputs([250, 500, 1000, 2000, 5000]);
+	}
 }
 
-// Render Pack Size Inputs
+// Draw the pack size input fields
 function renderPackSizeInputs(sizes) {
-    packSizesContainer.innerHTML = '';
-    sizes.forEach(size => addPackSizeInput(size));
+	packSizesContainer.innerHTML = '';
+	sizes.forEach(size => addPackSizeInput(size));
 }
 
-// Add Pack Size Input
+// Add a new pack size input row
 function addPackSizeInput(value = '') {
-    const div = document.createElement('div');
-    div.className = 'pack-size-input';
-    div.innerHTML = `
-        <input type="number" min="1" value="${value}" placeholder="Size" required>
-        <span>items</span>
-        <button type="button" class="btn btn-danger remove-pack" aria-label="Remove pack size">×</button>
-    `;
+	const div = document.createElement('div');
+	div.className = 'pack-size-input';
+	div.innerHTML = `
+		<input type="number" min="1" value="${value}" placeholder="Size" required>
+		<span>items</span>
+		<button type="button" class="btn btn-danger remove-pack" aria-label="Remove pack size">×</button>
+	`;
 
-    // Remove button handler
-    div.querySelector('.remove-pack').addEventListener('click', () => {
-        if (packSizesContainer.children.length > 1) {
-            div.remove();
-        } else {
-            showError('At least one pack size is required');
-        }
-    });
+	// Wire up the remove button
+	div.querySelector('.remove-pack').addEventListener('click', () => {
+		if (packSizesContainer.children.length > 1) {
+			div.remove();
+		} else {
+			showError('At least one pack size is required');
+		}
+	});
 
-    packSizesContainer.appendChild(div);
+	packSizesContainer.appendChild(div);
 }
 
-// Handle Update Config
+// Save the new pack sizes to the server
 async function handleUpdateConfig(e) {
-    e.preventDefault();
+	e.preventDefault();
 
-    const sizes = [];
-    const inputs = packSizesContainer.querySelectorAll('input');
+	// Gather all the input values
+	const sizes = [];
+	const inputs = packSizesContainer.querySelectorAll('input');
 
-    for (const input of inputs) {
-        const value = parseInt(input.value);
-        if (isNaN(value) || value <= 0) {
-            showError('All pack sizes must be positive numbers');
-            return;
-        }
-        sizes.push(value);
-    }
+	for (const input of inputs) {
+		const value = parseInt(input.value);
+		if (isNaN(value) || value <= 0) {
+			showError('All pack sizes must be positive numbers');
+			return;
+		}
+		sizes.push(value);
+	}
 
-    if (sizes.length === 0) {
-        showError('At least one pack size is required');
-        return;
-    }
+	if (sizes.length === 0) {
+		showError('At least one pack size is required');
+		return;
+	}
 
-    await updatePackSizes(sizes);
+	await updatePackSizes(sizes);
 }
 
-// Update Pack Sizes
+// Send the new pack sizes to the API
 async function updatePackSizes(sizes) {
-    try {
-        hideError();
+	try {
+		hideError();
 
-        const response = await fetch(`${API_BASE}/api/packsizes`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ packSizes: sizes }),
-        });
+		const response = await fetch(`${API_BASE}/api/packsizes`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ packSizes: sizes }),
+		});
 
-        if (!response.ok) {
-            const error = await response.text();
-            throw new Error(error || 'Failed to update pack sizes');
-        }
+		if (!response.ok) {
+			const error = await response.text();
+			throw new Error(error || 'Failed to update pack sizes');
+		}
 
-        const data = await response.json();
-        renderPackSizeInputs(data.packSizes);
-        hideResult();
+		const data = await response.json();
+		renderPackSizeInputs(data.packSizes);
+		hideResult();
 
-        // If there's an order quantity, recalculate with new sizes
-        const currentQuantity = parseInt(orderQuantityInput.value);
-        if (currentQuantity > 0) {
-            await calculatePacks(currentQuantity);
-        }
-    } catch (error) {
-        showError(error.message || 'An error occurred while updating pack sizes');
-    }
+		// Re-calculate with the new pack sizes if there's a value in the input
+		const currentQuantity = parseInt(orderQuantityInput.value);
+		if (currentQuantity > 0) {
+			await calculatePacks(currentQuantity);
+		}
+	} catch (error) {
+		showError(error.message || 'An error occurred while updating pack sizes');
+	}
 }
 
-// UI Helpers
+// Show/hide result section
 function showResult() {
-    resultSection.classList.remove('hidden');
+	resultSection.classList.remove('hidden');
 }
 
 function hideResult() {
-    resultSection.classList.add('hidden');
+	resultSection.classList.add('hidden');
 }
 
+// Show/hide error messages
 function showError(message) {
-    errorMessage.textContent = message;
-    errorSection.classList.remove('hidden');
+	errorMessage.textContent = message;
+	errorSection.classList.remove('hidden');
 }
 
 function hideError() {
-    errorSection.classList.add('hidden');
+	errorSection.classList.add('hidden');
 }
 
-// Handle input validation - prevent negative numbers
+// Don't let people enter negative numbers
 orderQuantityInput.addEventListener('input', function() {
-    if (this.value < 0) {
-        this.value = 0;
-    }
+	if (this.value < 0) {
+		this.value = 0;
+	}
 });
 
-// Add event delegation for dynamic pack size inputs
+// Validate pack size inputs as they're typed
 packSizesContainer.addEventListener('input', function(e) {
-    if (e.target.type === 'number') {
-        if (e.target.value < 1) {
-            e.target.value = 1;
-        }
-    }
+	if (e.target.type === 'number') {
+		if (e.target.value < 1) {
+			e.target.value = 1;
+		}
+	}
 });

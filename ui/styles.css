@@ -11,7 +11,6 @@
     --secondary-color: #64748b;
     --success-color: #10b981;
     --error-color: #ef4444;
-    --warning-color: #f59e0b;
     --bg-color: #f8fafc;
     --card-bg: #ffffff;
     --text-primary: #1e293b;
@@ -80,13 +79,6 @@ section h3 {
     font-weight: 600;
     margin-bottom: 1rem;
     color: var(--text-primary);
-}
-
-section h4 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    color: var(--text-secondary);
 }
 
 /* Forms */
@@ -312,8 +304,7 @@ section h4 {
     border-top: 1px solid var(--border-color);
 }
 
-.test-buttons,
-.preset-buttons {
+.test-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -324,40 +315,6 @@ section h4 {
     color: var(--text-secondary);
     font-size: 0.875rem;
     margin-bottom: 1.5rem;
-}
-
-.default-configs {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border-color);
-}
-
-/* Rules Section */
-.rules-section {
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    border: 1px solid #93c5fd;
-}
-
-.rules-list {
-    padding-left: 1.5rem;
-    color: var(--text-primary);
-}
-
-.rules-list li {
-    margin-bottom: 0.75rem;
-}
-
-.rules-list li strong {
-    color: var(--primary-color);
-}
-
-.rules-note {
-    margin-top: 1rem;
-    padding: 0.75rem;
-    background: rgba(37, 99, 235, 0.1);
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
-    color: var(--primary-dark);
 }
 
 /* Utility Classes */
@@ -379,8 +336,7 @@ section h4 {
         padding: 1.5rem;
     }
 
-    .test-buttons,
-    .preset-buttons {
+    .test-buttons {
         flex-direction: column;
     }
 
