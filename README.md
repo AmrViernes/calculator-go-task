@@ -10,12 +10,6 @@ A flexible REST API for calculating optimal pack sizes for customer orders.
 - Web UI for testing
 - Docker deployment ready
 
-## Packing Rules
-
-1. Only whole packs can be sent
-2. Send the least amount of items to fulfil the order
-3. Send as few packs as possible (rule 2 takes precedence)
-
 ## Quick Start
 
 ```bash
